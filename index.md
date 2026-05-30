@@ -1,14 +1,6 @@
 ---
-title: GitHub Copilot 企业推广方案
+title: GitHub Copilot 企业方案
 ---
-
-# GitHub Copilot 企业推广方案
-## 高管决策文档
-
-**版本**: 2.0 - 企业高管版  
-**最后更新**: 2026年5月  
-**受众**: Senior Manager, CTO, VP Engineering, CFO  
-**目标**: 企业级 AI 编码助手采纳决策
 
 ---
 
