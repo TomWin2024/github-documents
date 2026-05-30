@@ -1,88 +1,158 @@
 ---
-title: 企业级 Copilot 高效使用指南
+title: 开发阶段 Copilot 高效使用与 Demo
 ---
 
-# 企业级 Copilot 高效使用指南
+# 开发阶段 Copilot 高效使用与 Demo
 
-本文档面向企业团队管理员与开发者，提供实用流程、最佳实践与示例，帮助在团队内高效、安全地使用 GitHub Copilot for Business。
+本文聚焦在开发阶段的实战方法，按初级与高级场景给出可复现的 demo case（包含提示模板、测试与运行命令），便于在团队内试点和推广。
 
-## 目标
+## 快速说明
 
-- 快速上手 Copilot 并整合到日常开发流程
-- 保证代码质量与合规性
-- 提升团队产能并量化效果
+- 初级场景：适合刚开始使用 Copilot 的开发者，关注如何通过注释/测试驱动快速生成可用代码。
+- 高级场景：适合已有经验的工程师，关注重构、性能、跨模块协作与生成可测化代码。
 
-## 1. 准备与治理
+---
 
-- 订阅与账号：使用 Copilot for Business，为组织启用 SSO/SSO 链接到公司身份提供商。
-- 权限与准入：建立审计组、管理员账号与使用者分组（trial → pilot → org-wide）。
-- 数据与隐私策略：明确禁止将敏感信息发送给 Copilot（API keys、PII、内部秘钥），并在仓库模板中加入 `.gitignore` 与 secrets 指南。
-- 法律与合规：与法务确认 Copilot 服务条款与 IP 承诺，记录合规审计流程。
+## 初级案例 1 — Node.js: API + TDD
 
-## 2. 团队流程建议
+目标：用 Copilot 生成 `createUser` API 实现与 Jest 测试，实践“先写测试再实现”的流程。
 
-- 代码片段与复用：鼓励使用 Copilot 生成样板代码与单元测试，但关键业务逻辑和安全敏感代码需人工审查。
-- Pull Request（PR）策略：在 PR 模板中加入 “AI 建议来源” 字段，审查者需确认是否采纳与修改。
-- 代码审查与自动化：开启 CI 静态分析、依赖扫描与安全扫描（SCC、SCA）作为强制检查项。
-- 训练与分享：定期分享高质量 prompts、示例片段与最佳实践到内部知识库。
+项目结构（示例）：
 
-## 3. 高效使用技巧（开发者）
+```
+project/
+  src/
+    app.js
+    users.js
+  tests/
+    users.test.js
+  package.json
+```
 
-- 精确提示（Prompting）:
-  - 说明意图：先写函数签名与简短说明，再让 Copilot 填充实现。
-  - 提供约束：列出性能、错误处理、边界条件等约束。
-  - 示例驱动：给出输入/输出示例以引导生成更契合的代码。
-- 逐步生成：让 Copilot 先生成测试或接口，再生成实现（测试驱动生成）。
-- 分段验证：对于复杂功能分段生成并手动运行单元测试。
-- 使用注释模板：添加 TODO/NOTE 注释放置审查点，便于跟踪 AI 建议。
+关键步骤：
 
-## 4. 安全与代码质量控制
-
-- 依赖与漏洞管理：CI 中运行依赖扫描（例如 `dependabot`、`npm audit`、`snyk`）。
-- 敏感信息扫描：在预推送或 CI 流程中运行 secrets 检测（truffleHog、git-secrets）。
-- 代码相似度审查：对生成代码执行相似度检测以识别潜在许可证风险。
-- 审计日志：启用 Copilot 使用和审批日志，纳入安全监控平台。
-
-## 5. 管理与度量
-
-- 指标建议：采集以下核心指标以评估价值
-  - 建议采纳率（accepted suggestions）
-  - 生成代码触发的 PR 数量
-  - 单位时间内功能交付周期（lead time）
-  - 缺陷率和回滚次数
-- 试点与推广流程：先在小团队试点 4-6 周，收集指标与反馈，再逐步扩大。
-
-## 6. 常见问题与解决方案
-
-- Q: Copilot 生成不符合团队风格？
-  - A: 提供风格示例文件并把格式化/linters 加入 CI。
-- Q: 生成包含敏感信息？
-  - A: 立即从仓库中撤回，审查审计日志，启用 secrets 检测并告知使用者。
-- Q: 法律/开源合规顾虑？
-  - A: 与法务团队联动，使用生成代码相似度检查工具，保留人工审查流程。
-
-## 7. Prompt 模板（示例）
-
-示例：实现带输入验证的 API 处理器（Node.js）
+1. 在 `src/users.js` 写注释说明函数签名和错误处理：
 
 ```text
-# 说明
-函数: handleCreateUser(req, res)
-输入: req.body = {email, name}
-要求: 验证 email, 去重, 调用 userService.create, 返回 201 + 用户 id, 错误返回 4xx/5xx
-测试: 包含至少 3 个单元测试用例
-``` 
+// Function: createUser(req, res)
+// Input: req.body = { email, name }
+// Requirements: validate email, prevent duplicates, call userService.create, return 201+{id}
+```
 
-把上述内容写入注释并让 Copilot 补全实现与测试。
+2. 在 `tests/users.test.js` 写测试（示例）：
 
-## 8. 上手清单（Checklist）
+```javascript
+const request = require('supertest');
+const app = require('../src/app');
 
-- [ ] 启用 Copilot for Business 并配置 SSO
-- [ ] 建立 PR 审查模版，添加 AI 来源说明
-- [ ] 在 CI 中添加静态分析、依赖扫描与 secrets 检测
-- [ ] 编写并分享 prompt 与示例片段
-- [ ] 试点 1 个团队并收集 4 周数据
+test('create user success', async () => {
+  const res = await request(app).post('/users').send({ email: 'a@x.com', name: 'A' });
+  expect(res.statusCode).toBe(201);
+  expect(res.body).toHaveProperty('id');
+});
+```
+
+3. 触发 Copilot 生成 `createUser` 的实现，运行 `npm test`，查看失败并迭代。
+
+运行命令：
+
+```bash
+npm install
+npm test
+```
+
+提示模板（Prompt）：先写注释与测试，然后在函数体位置输入一行注释“// implement”并触发 Copilot 完成。
 
 ---
 
-如需，我可以把这份文档自动转换为漂亮的 HTML 页面并为你美化主题与导航。
+## 初级案例 2 — Python: 数据清洗函数 + pytest
+
+目标：生成小而可测的工具函数并配套测试。
+
+示例测试（`tests/test_normalize.py`）：
+
+```python
+from src.utils import normalize_emails
+
+def test_normalize():
+    assert normalize_emails([' A@X.COM ', 'bad']) == ['a@x.com']
+```
+
+在编辑器写好测试后，请让 Copilot 在 `src/utils.py` 中补全 `normalize_emails`，确保用最简单实现通过测试。
+
+运行命令：
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt  # if any
+pytest
+```
+
+---
+
+## 高级案例 1 — 重构与性能优化（分步、可基准测试）
+
+目标：对慢函数进行重构（分割、缓存、减少磁盘/数据库访问），并用基准测试验证改进。
+
+流程：
+
+1. 在代码中添加注释描述当前复杂度、瓶颈和目标（例如：目标将 O(n^2) 改为 O(n)）。
+2. 使用 Copilot 生成重构建议（先生成伪代码/注释），人工审阅。
+3. 让 Copilot 为每个子函数生成实现与单元测试。
+4. 添加基准脚本（Node: `benchmark/run.js` 或 Python: `pytest-benchmark`），比较前后性能。
+
+基准示例命令：
+
+```bash
+node benchmark/run.js
+# or
+pytest --benchmark-only
+```
+
+提示模板（高级）：
+
+"代码在模块 X，目标是将函数 Y 的复杂度从 O(n^2) 降到 O(n)，允许使用内存缓存但内存占用不得超过 200MB，请给出分解方案与性能测试代码。"
+
+---
+
+## 高级案例 2 — 接口契约驱动开发（OpenAPI / types）
+
+目标：先定义接口契约，再用 Copilot 生成 mock 服务、客户端调用示例和集成测试。
+
+步骤：
+
+1. 在 `api/schema.yaml` 中写简要 OpenAPI 描述（路径、请求与响应示例）。
+2. 在服务端/客户端目录中写接口签名与示例请求/响应注释。
+3. 让 Copilot 补全 mock 实现和测试，运行集成测试验证契约。
+
+示例命令：
+
+```bash
+npx openapi-generator-cli generate -i api/schema.yaml -g nodejs-express-server -o ./mock-server
+# or use a lightweight mock generator
+npx openapi-mock-generator api/schema.yaml --output=mock
+npm run test:integration
+```
+
+---
+
+## 高级提示模板汇总
+
+- 背景说明：模块、依赖、性能目标。
+- 输入输出示例（JSON 或 types）。
+- 约束条件（内存、时延、禁止使用某些依赖）。
+- 要求输出包含：单元测试、错误处理、边界测试用例。
+
+---
+
+## 下一步建议
+
+- 我可以为你把任意一个 demo 做成最小可运行仓库（含 `package.json`、测试与 GitHub Actions CI），并把它放到你当前仓库的 `examples/` 目录下。请选择要生成的用例：
+  - A: Node.js API TDD 用例
+  - B: Python 数据函数 + pytest
+  - C: 重构与基准测试示例
+  - D: OpenAPI mock + 集成测试
+
+
+如需我继续生成任意示例，我会把对应文件创建、提交并同步到 Pages。
